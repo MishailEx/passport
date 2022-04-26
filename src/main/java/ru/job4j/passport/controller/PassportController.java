@@ -9,7 +9,6 @@ import ru.job4j.passport.service.PassportService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,36 +37,41 @@ public class PassportController {
     }
 
     @DeleteMapping
-    public void delete(@RequestParam int id) {
-        service.delete(id);
+    public ResponseEntity<Void> delete(@RequestParam int id) {
+        int rsl = service.delete(id);
+        return ResponseEntity
+                .status(rsl != 0 ? HttpStatus.OK : HttpStatus.NOT_FOUND)
+                .build();
     }
 
     @GetMapping("/find")
     public List<Passport> findAll(@RequestParam(required = false) String serial) {
         if (serial != null) {
-                int check = Integer.parseInt(serial);
-                return service.findBySerial(check);
+            int check = Integer.parseInt(serial);
+            return service.findBySerial(check);
         }
         return service.findAll();
     }
 
-    @ExceptionHandler(value = { NumberFormatException.class })
+    @ExceptionHandler(value = {NumberFormatException.class})
     public void exceptionHandler(Exception e, HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setContentType("application/json");
-        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
-            put("message", e.getMessage());
-            put("type", e.getClass());
-        }}));
+        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {
+            {
+                put("message", e.getMessage());
+                put("type", e.getClass());
+            }
+        }));
     }
 
     @GetMapping("/unavaliabe")
-    public List<Passport> unavaliabe() throws ParseException {
+    public List<Passport> unavaliabe() {
         return service.getUnavaliablePassport();
     }
 
     @GetMapping("/find-replaceable")
-    public List<Passport> findReplaceable() throws ParseException {
+    public List<Passport> findReplaceable() {
         return service.findReplaceable();
     }
 }

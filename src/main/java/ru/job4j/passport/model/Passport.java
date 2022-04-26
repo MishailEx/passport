@@ -1,20 +1,18 @@
 package ru.job4j.passport.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.Objects;
 
 @Entity
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "number", "serial" }) })
 public class Passport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
     private String secondName;
+    private int number;
     private int serial;
     private LocalDate dateIssue;
 
@@ -61,6 +59,14 @@ public class Passport {
         this.dateIssue = dateIssue;
     }
 
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -70,13 +76,11 @@ public class Passport {
             return false;
         }
         Passport passport = (Passport) o;
-        return id == passport.id && serial == passport.serial && Objects.equals(name, passport.name) && Objects.equals(secondName, passport.secondName) && Objects.equals(dateIssue, passport.dateIssue);
+        return id == passport.id && number == passport.number && serial == passport.serial && Objects.equals(name, passport.name) && Objects.equals(secondName, passport.secondName) && Objects.equals(dateIssue, passport.dateIssue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, secondName, serial, dateIssue);
+        return Objects.hash(id, name, secondName, number, serial, dateIssue);
     }
-
-
 }

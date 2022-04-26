@@ -4,13 +4,8 @@ import org.springframework.stereotype.Service;
 import ru.job4j.passport.model.Passport;
 import ru.job4j.passport.repository.PassportRepository;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -37,8 +32,8 @@ public class PassportService {
         return rsl;
     }
 
-    public void delete(int id) {
-        repository.deleteById(id);
+    public int delete(int id) {
+        return repository.deleteById(id);
     }
 
     public List<Passport> findAll() {
@@ -49,20 +44,25 @@ public class PassportService {
         return repository.findBySerial(serial);
     }
 
-    public List<Passport> getUnavaliablePassport() throws ParseException {
-        LocalDate date = LocalDate.now().minusYears(10);
-        return repository.findByDateIssueBefore(date);
+    public List<Passport> getUnavaliablePassport() {
+        List<Passport> list = new ArrayList<>();
+        LocalDate date20 = minusYear(20);
+        LocalDate date45 = minusYear(45);
+        list.addAll(repository.findByDateIssueBetween(date20.minusMonths(1), date20));
+        list.addAll(repository.findByDateIssueBetween(date45.minusMonths(1), date45));
+        return list;
     }
 
-    public List<Passport> findReplaceable() throws ParseException {
-        LocalDate dateAfter = LocalDate.now().minusYears(10);
-        LocalDate dateBefore = LocalDate.now().minusYears(10).plusMonths(3);
-        return repository.findByDateIssueBetween(dateAfter, dateBefore);
+    public List<Passport> findReplaceable() {
+        List<Passport> list = new ArrayList<>();
+        LocalDate date20 = minusYear(20);
+        LocalDate date45 = minusYear(45);
+        list.addAll(repository.findByDateIssueBetween(date20, date20.plusMonths(3)));
+        list.addAll(repository.findByDateIssueBetween(date45, date45.plusMonths(3)));
+        return list;
     }
 
-//    public static void main(String[] args) throws ParseException {
-//        Date date =  new SimpleDateFormat("dd/MM/yyyy")
-//                .parse(LocalDate.now().minusYears(10).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-//        System.out.println(date);
-//    }
+    private LocalDate minusYear(int year) {
+       return LocalDate.now().minusYears(year);
+    }
 }
