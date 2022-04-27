@@ -1,8 +1,12 @@
 package ru.job4j.passport.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.passport.model.Passport;
 import ru.job4j.passport.service.PassportService;
@@ -11,12 +15,17 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@EnableScheduling
 @RestController
 @RequestMapping("/passport")
 public class PassportController {
     private final PassportService service;
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    private KafkaTemplate<Integer, String> kafkaTemplate;
 
     public PassportController(PassportService service, ObjectMapper objectMapper) {
         this.service = service;
@@ -66,12 +75,18 @@ public class PassportController {
     }
 
     @GetMapping("/unavaliabe")
+    @Scheduled(cron = "0 0 8 * * *")
     public List<Passport> unavaliabe() {
-        return service.getUnavaliablePassport();
+        return service.getUnavaliablePassport().stream()
+                .peek((p) -> kafkaTemplate.send("email", p.getId(), "replace passport"))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/find-replaceable")
+    @Scheduled(cron = "0 0 8 * * *")
     public List<Passport> findReplaceable() {
-        return service.findReplaceable();
+        return service.findReplaceable().stream()
+                .peek((p) -> kafkaTemplate.send("email", p.getId(), "soon replace passport"))
+                .collect(Collectors.toList());
     }
 }
